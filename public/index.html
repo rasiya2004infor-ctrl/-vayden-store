@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VAYDEN — Clothing</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><a href="/"><img src="/vayden-logo.png" alt="VAYDEN"></a><nav><a href="#shop">Shop</a><a href="#about">About</a><a href="/admin">Admin</a></nav><button onclick="openCart()">Cart <b id="cc">0</b></button></header>
+<section class="hero"><p>VAYDEN CLOTHING</p><h1>WEAR YOUR<br><i>IDENTITY.</i></h1><a href="#shop">SHOP THE DROP</a></section>
+<section id="shop"><small>COLLECTION</small><h2>Premium Polo<br>VAYDEN Men's T-shirts</h2><div id="products"></div></section>
+<section id="about"><small>THE BRAND</small><h2>Simple. Bold. VAYDEN.</h2><p>Premium everyday clothing with a clean, confident identity.</p></section>
+<footer>© 2026 VAYDEN Clothing</footer>
+<aside id="cart"><button onclick="closeCart()">×</button><h2>Your Cart</h2><div id="items"></div><strong id="total">LKR 0</strong><button class="order" onclick="order()">ORDER ON WHATSAPP</button></aside><div id="shade" onclick="closeCart()"></div>
+<script>
+let ps=[],cart=[];
+const money=n=>"LKR "+Number(n).toLocaleString();
+async function load(){ps=await (await fetch("/api/products")).json();document.querySelector("#products").innerHTML=ps.map(p=>`<article><img src="${p.image}" alt="${p.name}"><div><h3>${p.name}</h3><p>${p.colour} · ${money(p.price)}</p><small>Sizes: ${p.sizes||"—"} · ${p.stock>0?"In stock":"Sold out"}</small><button ${p.stock<=0?"disabled":""} onclick="add(${p.id})">${p.stock>0?"ADD TO CART":"SOLD OUT"}</button></div></article>`).join("")}
+function add(id){let p=ps.find(x=>x.id===id);if(p)cart.push(p);renderCart();openCart()}
+function renderCart(){document.querySelector("#cc").textContent=cart.length;document.querySelector("#items").innerHTML=cart.map((p,i)=>`<p>${p.name}<br>${money(p.price)} <button onclick="cart.splice(${i},1);renderCart()">Remove</button></p>`).join("")||"<p>Your cart is empty.</p>";document.querySelector("#total").textContent=money(cart.reduce((a,p)=>a+p.price,0))}
+function openCart(){document.querySelector("#cart").classList.add("on");document.querySelector("#shade").classList.add("on")}function closeCart(){document.querySelector("#cart").classList.remove("on");document.querySelector("#shade").classList.remove("on")}
+function order(){if(!cart.length)return alert("Your cart is empty.");let t=encodeURIComponent("VAYDEN ORDER\n\n"+cart.map(p=>p.name+" — "+money(p.price)).join("\n")+"\n\nTotal: "+money(cart.reduce((a,p)=>a+p.price,0)));window.open("https://wa.me/?text="+t,"_blank")}
+load();renderCart();
+</script></body></html>

@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VAYDEN Admin</title><link rel="stylesheet" href="/admin.css"></head><body><main>
+<div id="login"><img src="/vayden-logo.png"><h1>Admin Panel</h1><input id="pw" type="password" placeholder="Admin password"><button onclick="login()">LOGIN</button><p id="err"></p></div>
+<div id="app" hidden><header><img src="/vayden-logo.png"><button onclick="logout()">LOG OUT</button></header><section><h1 id="title">Add Product</h1><form id="form"><input id="name" placeholder="Product name" required><input id="price" type="number" min="0" placeholder="Price (LKR)"><input id="colour" placeholder="Colour"><input id="sizes" placeholder="Sizes e.g. S, M, L, XL"><input id="stock" type="number" min="0" placeholder="Stock"><input id="image" type="file" accept="image/jpeg,image/png,image/webp"><button>SAVE PRODUCT</button><button type="button" onclick="resetForm()">CLEAR</button></form></section><section><h2>Products</h2><div id="list"></div></section></div></main>
+<script>
+let editing=null;
+const $=x=>document.querySelector(x);
+async function api(url,opt={}){let r=await fetch(url,opt);let d=await r.json();if(!r.ok)throw Error(d.error||"Error");return d}
+async function login(){try{await api("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("#pw").value})});show()}catch(e){$("#err").textContent=e.message}}
+async function show(){ $("#login").hidden=true;$("#app").hidden=false;load()}
+async function load(){let p=await api("/api/products");$("#list").innerHTML=p.map(x=>`<article><img src="${x.image}"><div><b>${x.name}</b><p>LKR ${Number(x.price).toLocaleString()} · ${x.colour} · Stock ${x.stock}</p><small>${x.sizes||""}</small><p><button onclick='edit(${JSON.stringify(x)})'>EDIT</button> <button onclick="del(${x.id})">DELETE</button></p></div></article>`).join("")}
+function edit(x){editing=x.id;$("#title").textContent="Edit Product";["name","price","colour","sizes","stock"].forEach(k=>$("#"+k).value=x[k]??"");scrollTo(0,0)}
+function resetForm(){editing=null;$("#title").textContent="Add Product";$("#form").reset()}
+$("#form").onsubmit=async e=>{e.preventDefault();let f=new FormData();["name","price","colour","sizes","stock"].forEach(k=>f.append(k,$("#"+k).value));if($("#image").files[0])f.append("image",$("#image").files[0]);try{await api(editing?"/api/products/"+editing:"/api/products",{method:editing?"PUT":"POST",body:f});resetForm();load();alert("Saved.")}catch(e){alert(e.message)}}
+async function del(id){if(confirm("Delete this product?")){await api("/api/products/"+id,{method:"DELETE"});load()}}
+async function logout(){await api("/api/logout",{method:"POST"});location.reload()}
+(async()=>{try{if((await api("/api/me")).admin)show()}catch{}})();
+</script></body></html>
